@@ -8,7 +8,7 @@ ui <- fluidPage(
       selectInput("plot", label = h3("Select visualisation:"),
                   choices = list("Bar" = "bar", "Scatterplot" = "scatter")),
       
-      selectInput("outcome", label = h3("Select variable:"),
+      selectInput("outcome", label = h3("Select variable"),
                   choices = list("Fertility" = "Fertility",
                                  "Agriculture" = "Agriculture",
                                  "Education" = "Education",
@@ -22,11 +22,9 @@ ui <- fluidPage(
                                  "Catholic" = "Catholic",
                                  "Infant.Mortality" = "Infant.Mortality"), selected = 1),
       
-      # TODO: Show this selection in plots
-      selectInput("location", label = h3("Select location"),
-                  choices = list("Mean" = "Mean",
-                                 "Median" = "Median",
-                                 "Mode" = "Mode"), selected = 1)
+      checkboxGroupInput("location", label = h3("Select location"), 
+                         choices = list("Mean" = "Mean",
+                                        "Median" = "Median"), selected = 1)
       
     ),
     
@@ -34,8 +32,7 @@ ui <- fluidPage(
       
       tabsetPanel(type = "tabs",
                   
-                  tabPanel("Plot", plotOutput("plot")),
-                  # TODO: integrate Distribution into plot?
+                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), renderPlot("lm")),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
                   tabPanel("Summary", verbatimTextOutput("summary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
@@ -63,15 +60,29 @@ server <- function(input, output) {
   # Plot output
   output$plot <- renderPlot({
     # TODO: Check if scatterplot makes sense -> variables are different
-    if(input$plot == "scatter") {
+    if(input$plot == "scatter" && swiss[,input$outcome] != swiss[,input$indepvar]) {
       plot(swiss[,input$indepvar], swiss[,input$outcome], main="Scatterplot",
            xlab=input$indepvar, ylab=input$outcome, pch=19)
       abline(lm(swiss[,input$outcome] ~ swiss[,input$indepvar]), col="red")
       lines(lowess(swiss[,input$indepvar],swiss[,input$outcome]), col="blue")
+      
+      # show legend
+      legend(x = "topright",
+             c("Variable", "Second variable"),
+             col = c("blue", "red"),
+             lwd = c(2, 2))
+    }
+    else if (input$plot == "scatter" && swiss[,input$outcome] == swiss[,input$indepvar]) {
+      qqnorm(swiss[,input$outcome])
+      qqline(swiss[,input$outcome], col="blue")
     }
     else if (input$plot == "bar") {
       barplot(swiss[,input$outcome], xlab=input$outcome)
     }
+  })
+  
+  output$lm <- renderPlot({
+    simple.fit <- lm(Education~Fertility, data = swiss)
   })
   
   # Plot boxplot
@@ -93,22 +104,33 @@ server <- function(input, output) {
     lines(xfit, yfit, col="blue", lwd=2)
     
     # TODO: show location based on selected location value?
-    abline(v = median(swiss[,input$outcome]),
-           col = "purple",
-           lwd = 2)
-    abline(v = mean(swiss[,input$outcome]),
-           col = "red",
-           lwd = 2)
-    abline(v = mode(swiss[,input$outcome]),
-           col = "green",
-           lwd = 2)
+    for(i in input$location){
+        switch(i, 
+               "Mean"={
+                 abline(v = mean(swiss[,input$outcome]),
+                        col = "green",
+                        lwd = 2)
+               },
+               "Median"={
+                 abline(v = median(swiss[,input$outcome]),
+                        col = "red",
+                        lwd = 2)   
+               }
+        )
+    }
     
     # show legend
     legend(x = "topright",
-           c("Density plot", "Mean", "Median", "Mode"),
-           col = c("blue", "purple", "red", "green"),
+           c("Density plot", "Mean", "Median"),
+           col = c("blue", "green", "red"),
            lwd = c(2, 2, 2))
   })
+  
+  output$correlation <- renderText({
+    if(input$plot == "scatter") {
+      cor(swiss[,input$outcome], swiss[,input$indepvar], method = c("pearson"));
+    }
+  }) 
 }
 
 shinyApp(ui = ui, server = server)
