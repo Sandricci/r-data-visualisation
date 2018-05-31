@@ -59,7 +59,6 @@ server <- function(input, output) {
   
   # Plot output
   output$plot <- renderPlot({
-    # TODO: Check if scatterplot makes sense -> variables are different
     if(input$plot == "scatter" && swiss[,input$outcome] != swiss[,input$indepvar]) {
       plot(swiss[,input$indepvar], swiss[,input$outcome], main="Scatterplot",
            xlab=input$indepvar, ylab=input$outcome, pch=19)
@@ -103,7 +102,6 @@ server <- function(input, output) {
     yfit <- yfit*diff(h$mids[1:2])*length(swiss[,input$outcome]) 
     lines(xfit, yfit, col="blue", lwd=2)
     
-    # TODO: show location based on selected location value?
     for(i in input$location){
         switch(i, 
                "Mean"={
