@@ -25,7 +25,7 @@ ui <- fluidPage(
       
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
-                                        "Median" = "Median"), selected = 1)
+                                        "Median" = "Median", "Weighted Mean" = "Weighted"), selected = 1)
       
     ),
     
@@ -38,6 +38,7 @@ ui <- fluidPage(
                            renderPlot("lm")),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
                   tabPanel("Correlations", plotOutput("correlations")),
+                  tabPanel("Linear Model", plotOutput("lmplot"), verbatimTextOutput("lmsummary")),
                   tabPanel("Summary", verbatimTextOutput("summary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
                   
@@ -117,15 +118,20 @@ server <- function(input, output) {
                abline(v = median(swiss[,input$outcome]),
                       col = "red",
                       lwd = 2)   
+             },
+             "Weighted"={
+               abline(v = weighted.mean(swiss[,input$outcome]),
+                      col = "orange",
+                      lwd = 2)
              }
       )
     }
     
     # show legend
     legend(x = "topright",
-           c("Density plot", "Mean", "Median"),
-           col = c("blue", "green", "red"),
-           lwd = c(2, 2, 2))
+           c("Density plot", "Mean", "Median", "Weighted Mean"),
+           col = c("blue", "green", "red", "orange"),
+           lwd = c(2, 2, 2, 2))
   })
   
   output$correlation <- renderText({
@@ -185,6 +191,18 @@ server <- function(input, output) {
       text(0.5, 0.5, txt, cex = cex.cor * r)
     }
     pairs(swiss, lower.panel = panel.smooth, upper.panel = panel.cor, main="Scatterplot Matrix")
+  })
+  
+  output$lmplot <- renderPlot({
+    lm <- lm(swiss[,input$outcome] ~ swiss[,input$indepvar])
+    par(mfrow=c(1,2))
+    plot(lm, which=1, main="Residuals vs. Fitted")
+    plot(lm, which=2, main="QQ Plot of Residuals")
+  })
+  
+  output$lmsummary <- renderPrint({
+    lm <- lm(swiss[,input$outcome] ~ swiss[,input$indepvar])
+    summary(lm)
   })
   
 }
