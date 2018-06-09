@@ -1,12 +1,13 @@
 library(shiny)
 library(DT)
+library(moments)
 
 ui <- fluidPage(
   titlePanel("Exercise 1 - Dataset: Swiss"),
   sidebarLayout(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
-                  choices = list("Bar" = "bar", "Scatterplot" = "scatter")),
+                  choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot")),
       
       selectInput("outcome", label = h3("Select variable"),
                   choices = list("Fertility" = "Fertility",
@@ -32,7 +33,9 @@ ui <- fluidPage(
       
       tabsetPanel(type = "tabs",
                   
-                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), renderPlot("lm")),
+                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), 
+                           htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), 
+                           renderPlot("lm")),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
                   tabPanel("Summary", verbatimTextOutput("summary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
@@ -59,7 +62,7 @@ server <- function(input, output) {
   
   # Plot output
   output$plot <- renderPlot({
-    if(input$plot == "scatter" && swiss[,input$outcome] != swiss[,input$indepvar]) {
+    if(input$plot == "scatter") {
       plot(swiss[,input$indepvar], swiss[,input$outcome], main="Scatterplot",
            xlab=input$indepvar, ylab=input$outcome, pch=19)
       abline(lm(swiss[,input$outcome] ~ swiss[,input$indepvar]), col="red")
@@ -71,9 +74,9 @@ server <- function(input, output) {
              col = c("blue", "red"),
              lwd = c(2, 2))
     }
-    else if (input$plot == "scatter" && swiss[,input$outcome] == swiss[,input$indepvar]) {
+    else if (input$plot == "qqplot") {
       qqnorm(swiss[,input$outcome])
-      qqline(swiss[,input$outcome], col="blue")
+      qqline(swiss[,input$outcome], col="red")
     }
     else if (input$plot == "bar") {
       barplot(swiss[,input$outcome], xlab=input$outcome)
@@ -103,18 +106,18 @@ server <- function(input, output) {
     lines(xfit, yfit, col="blue", lwd=2)
     
     for(i in input$location){
-        switch(i, 
-               "Mean"={
-                 abline(v = mean(swiss[,input$outcome]),
-                        col = "green",
-                        lwd = 2)
-               },
-               "Median"={
-                 abline(v = median(swiss[,input$outcome]),
-                        col = "red",
-                        lwd = 2)   
-               }
-        )
+      switch(i, 
+             "Mean"={
+               abline(v = mean(swiss[,input$outcome]),
+                      col = "green",
+                      lwd = 2)
+             },
+             "Median"={
+               abline(v = median(swiss[,input$outcome]),
+                      col = "red",
+                      lwd = 2)   
+             }
+      )
     }
     
     # show legend
@@ -128,7 +131,43 @@ server <- function(input, output) {
     if(input$plot == "scatter") {
       cor(swiss[,input$outcome], swiss[,input$indepvar], method = c("pearson"));
     }
-  }) 
+  })
+  
+  output$measures <- renderUI({tagList(
+    tags$table(class="table table-condensed table-bordered table-striped table-hover",
+               tags$thead(tags$tr(tags$th("Measure"), tags$th("Value"))),
+               tags$tbody(
+                 tags$tr(tags$th("Skewness"), tags$td(skewness(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Kurtosis / Excess"), tags$td(kurtosis(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Variance"), tags$td(var(swiss[,input$outcome])))
+               )
+    )
+  )
+  })
+  output$locations <- renderUI({tagList(
+    tags$table(class="table table-condensed table-bordered table-striped table-hover",
+               tags$thead(tags$tr(tags$th("Location"), tags$th("Value"))),
+               tags$tbody(
+                 tags$tr(tags$th("Mean"), tags$td(mean(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Median"), tags$td(median(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Weighted Mean"), tags$td(weighted.mean(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Trimmed Mean (10%)"), tags$td(mean(swiss[,input$outcome], trim = 0.10)))
+               )
+    )
+  )
+  })
+  output$variations <- renderUI({tagList(
+    tags$table(class="table table-condensed table-bordered table-striped table-hover",
+               tags$thead(tags$tr(tags$th("Variation"), tags$th("Value"))),
+               tags$tbody(
+                 tags$tr(tags$th("Variance"), tags$td(var(swiss[,input$outcome]))),
+                 tags$tr(tags$th("Standard Deviation"), tags$td(sd(swiss[,input$outcome]))),
+                 # tags$tr(tags$th("Range"), tags$td(range(swiss[,input$outcome]))), # error here
+                 tags$tr(tags$th("MAD (median)"), tags$td(mad(swiss[,input$outcome])))
+               )
+    )
+  )
+  })
 }
 
 shinyApp(ui = ui, server = server)
