@@ -36,7 +36,7 @@ ui <- fluidPage(
                   tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), 
                            htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), 
                            renderPlot("lm")),
-                  tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
+                  tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
                   tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
                   tabPanel("Linear Model", plotOutput("lmplot"), verbatimTextOutput("lmsummary")),
                   tabPanel("Summary", verbatimTextOutput("summary")),
@@ -90,7 +90,7 @@ server <- function(input, output) {
   })
   
   # Plot boxplot
-  output$boxplot <- renderPlot({
+  output$distboxplot <- renderPlot({
     # without frame: frame = F
     # without axes: axes = FALSE
     # TODO: Align boxplot with histogram axis
@@ -98,8 +98,8 @@ server <- function(input, output) {
   })
   
   # Histogram output for distribution
-  output$distribution <- renderPlot({
-    h <- hist(swiss[,input$outcome], main="", xlab=input$outcome)
+  output$distplot <- renderPlot({
+    h <- hist(swiss[,input$outcome], main="Histogram", xlab=input$outcome)
     
     # set density line
     xfit<-seq(min(swiss[,input$outcome]),max(swiss[,input$outcome]),length=40) 
