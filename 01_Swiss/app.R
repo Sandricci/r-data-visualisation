@@ -37,7 +37,7 @@ ui <- fluidPage(
                            htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), 
                            renderPlot("lm")),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
-                  tabPanel("Correlations", plotOutput("correlations")),
+                  tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
                   tabPanel("Linear Model", plotOutput("lmplot"), verbatimTextOutput("lmsummary")),
                   tabPanel("Summary", verbatimTextOutput("summary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
@@ -177,7 +177,7 @@ server <- function(input, output) {
   })
   
   # Plot Scatterplot Matrix
-  output$correlations <- renderPlot({
+  output$corplot <- renderPlot({
     ## put (absolute) correlations on the upper panels,
     ## with size proportional to the correlations.
     panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
@@ -191,6 +191,11 @@ server <- function(input, output) {
       text(0.5, 0.5, txt, cex = cex.cor * r)
     }
     pairs(swiss, lower.panel = panel.smooth, upper.panel = panel.cor, main="Scatterplot Matrix")
+  })
+  
+  output$corsummary <- renderPrint({
+    lm <- lm(Education ~ ., swiss)
+    summary(lm)
   })
   
   output$lmplot <- renderPlot({
