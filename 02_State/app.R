@@ -76,7 +76,7 @@ server <- function(input, output) {
   })
   
   output$lm <- renderPlot({
-    simple.fit <- lm(Education~Fertility, data = dat)
+    simple.fit <- lm(Murder~Population, data = dat)
   })
   
   # Plot boxplot
@@ -184,7 +184,7 @@ server <- function(input, output) {
   })
   
   output$corsummary <- renderPrint({
-    lm <- lm(Education ~ ., dat)
+    lm <- lm(Murder ~ ., dat)
     summary(lm)
   })
   
