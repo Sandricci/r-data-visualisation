@@ -9,24 +9,13 @@ ui <- fluidPage(
       selectInput("plot", label = h3("Select visualisation:"),
                   choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot")),
       
-      selectInput("outcome", label = h3("Select variable"),
-                  choices = list("Fertility" = "Fertility",
-                                 "Agriculture" = "Agriculture",
-                                 "Education" = "Education",
-                                 "Catholic" = "Catholic",
-                                 "Infant.Mortality" = "Infant.Mortality"), selected = 1),
+      selectInput("outcome", label = h3("Select variable"), names(swiss), selected = "Education"),
       
-      selectInput("indepvar", label = h3("Select second variable"),
-                  choices = list("Fertility" = "Fertility",
-                                 "Agriculture" = "Agriculture",
-                                 "Education" = "Education",
-                                 "Catholic" = "Catholic",
-                                 "Infant.Mortality" = "Infant.Mortality"), selected = 1),
+      selectInput("indepvar", label = h3("Select second variable"),names(swiss),multiple = T, selected = "Fertility"),
       
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
                                         "Median" = "Median", "Weighted Mean" = "Weighted"), selected = 1)
-      
     ),
     
     mainPanel(
@@ -38,14 +27,13 @@ ui <- fluidPage(
                            renderPlot("lm")),
                   tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
                   tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
-                  tabPanel("Linear Model", plotOutput("lmplot"), verbatimTextOutput("lmsummary")),
-                  tabPanel("Summary", verbatimTextOutput("summary")),
+                  tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),
+                  tabPanel("Summary", verbatimTextOutput("summary"), verbatimTextOutput("lmsummary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
                   
       )
     )
   ))
-
 
 
 # SERVER
@@ -199,14 +187,18 @@ server <- function(input, output) {
   })
   
   output$lmplot <- renderPlot({
-    lm <- lm(swiss[,input$outcome] ~ swiss[,input$indepvar])
-    par(mfrow=c(1,2))
-    plot(lm, which=1, main="Residuals vs. Fitted")
-    plot(lm, which=2, main="QQ Plot of Residuals")
+    if(length(input$indepvar) == 0) return;
+    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
+    par(mfrow=c(2,2))
+    plot(lm, which=1)
+    plot(lm, which=2)
+    plot(lm, which=3)
+    plot(lm, which=4)
   })
   
   output$lmsummary <- renderPrint({
-    lm <- lm(swiss[,input$outcome] ~ swiss[,input$indepvar])
+    if(length(input$indepvar) == 0) return;
+    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
     summary(lm)
   })
   
