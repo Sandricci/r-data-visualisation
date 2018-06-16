@@ -23,7 +23,7 @@ ui <- fluidPage(
       tabsetPanel(type = "tabs",
                   
                   tabPanel("Plot", plotOutput("plot", height = 800), verbatimTextOutput("correlation")),
-                  tabPanel("Momente, Lage & Variation", 
+                  tabPanel("Moments, Location, Variation", 
                            column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
                   tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),

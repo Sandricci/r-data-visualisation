@@ -22,9 +22,9 @@ ui <- fluidPage(
       
       tabsetPanel(type = "tabs",
                   
-                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), 
-                           htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), 
-                           renderPlot("lm")),
+                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation")),
+                  tabPanel("Moments, Location, Variation", 
+                           column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
                   tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
                   tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
                   tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),
