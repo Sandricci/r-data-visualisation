@@ -7,7 +7,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
-                  choices = list("Plot" = "plot", "Time Series" = "series", "ACF" = "acf"), selected = "plot"),
+                  choices = list("Plot" = "plot", "Time Series" = "series", "QQ-Plot" = "qqplot", "ACF" = "acf"), selected = "plot"),
       
       selectInput("lags", label = h3("Number of lags:"),
                   choices = c(1:9), selected = 1),
@@ -45,6 +45,10 @@ server <- function(input, output) {
     }
     else if(input$plot == "plot") {
       plot(LakeHuron, ylab="depth (in feet)", xlab = "Time (in years)") 
+    }
+    else if (input$plot == "qqplot") {
+      qqnorm(LakeHuron)
+      qqline(LakeHuron, col="red")
     }
     else if(input$plot == "acf") {
       acf(LakeHuron, main ="Estimation of Auto-Correlation Function (ACF)", legend) 
