@@ -1,15 +1,6 @@
 library(shiny)
 library(ggplot2)
 library(moments)
-t <- as.data.frame(Titanic)
-adult <- subset(t, Age == 'Adult')
-child <- subset(t, Age == 'Child')
-died <- subset(t, Survived == 'No')
-survived <- subset(t, Survived == 'Yes')
-adult_died <- subset(adult, Survived == 'No')
-adult_survived <- subset(adult, Survived == 'Yes')
-child_died <- subset(child, Survived == 'No')
-child_survived <- subset(child, Survived == 'Yes')
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
