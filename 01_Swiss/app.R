@@ -229,6 +229,7 @@ server <- function(input, output) {
   output$lmplot <- renderPlot({
     if(length(input$indepvar) == 0) return;
     fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=filtered())
+    # fit <- lm(Education ~ log(Catholic) + Agriculture + Fertility + Infant.Mortality, data=filtered())
     par(mfrow=c(2,2))
     plot(fit)
   })
@@ -236,13 +237,14 @@ server <- function(input, output) {
   output$lmsummary <- renderPrint({
     if(length(input$indepvar) == 0) return;
     fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=filtered())
+    # fit <- lm(Education ~ log(Catholic) + Agriculture + Fertility + Infant.Mortality, data=filtered())
     summary(fit)
   })
   
   filtered <- function() {
-    subset <- swiss
+    subset <- t
     for(i in input$outliers) {
-      subset <- swiss[!(row.names(swiss) %in% input$outliers),]
+      subset <- t[!(row.names(t) %in% input$outliers),]
     }
     return(subset)
   }
