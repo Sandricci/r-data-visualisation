@@ -12,7 +12,8 @@ ui <- fluidPage(
       selectInput("outcome", label = h3("Select variable"), names(swiss), selected = "Education"),
       
       selectInput("indepvar", label = h3("Select second variable"),names(swiss),multiple = T, selected = "Fertility"),
-      
+      selectInput("outliers", label = h3("Remove Outlier(s)"), 
+                  choices = rownames(swiss), multiple=T, selected = 1),
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
                                         "Median" = "Median"), selected = 1)
@@ -41,22 +42,23 @@ server <- function(input, output) {
   
   # Regression output
   output$summary <- renderPrint({
-    fit <- swiss[,input$outcome]
+    fit <- filtered()[,input$outcome]
     summary(fit)
   })
   
   # Data output
   output$tbl = DT::renderDataTable({
-    DT::datatable(swiss, options = list(lengthChange = FALSE))
+    DT::datatable(filtered(), options = list(lengthChange = FALSE))
   })
   
   # Plot output
   output$plot <- renderPlot({
+    subset <- filtered()
     if(input$plot == "scatter") {
-      plot(swiss[,input$indepvar], swiss[,input$outcome], main="Scatterplot",
+      plot(subset[,input$indepvar], subset[,input$outcome], main="Scatterplot",
            xlab=input$indepvar, ylab=input$outcome, pch=19)
-      abline(lm(swiss[,input$outcome] ~ swiss[,input$indepvar]), col="red")
-      lines(lowess(swiss[,input$indepvar],swiss[,input$outcome]), col="blue")
+      abline(lm(subset[,input$outcome] ~ subset[,input$indepvar]), col="red")
+      lines(lowess(subset[,input$indepvar],subset[,input$outcome]), col="blue")
       
       # show legend
       legend(x = "topright",
@@ -65,11 +67,11 @@ server <- function(input, output) {
              lwd = c(2, 2))
     }
     else if (input$plot == "qqplot") {
-      qqnorm(swiss[,input$outcome])
-      qqline(swiss[,input$outcome], col="red")
+      qqnorm(subset[,input$outcome])
+      qqline(subset[,input$outcome], col="red")
     }
     else if (input$plot == "bar") {
-      barplot(swiss[,input$outcome], xlab=input$outcome)
+      barplot(subset[,input$outcome], xlab=input$outcome)
     }
   })
   
@@ -82,28 +84,29 @@ server <- function(input, output) {
     # without frame: frame = F
     # without axes: axes = FALSE
     # TODO: Align boxplot with histogram axis
-    boxplot(swiss[,input$outcome], horizontal = TRUE, staplewex = 1)
+    boxplot(filtered()[,input$outcome], horizontal = TRUE, staplewex = 1)
   })
   
   # Histogram output for distribution
   output$distplot <- renderPlot({
-    h <- hist(swiss[,input$outcome], main="Histogram", xlab=input$outcome)
+    subset <- filtered()
+    h <- hist(subset[,input$outcome], main="Histogram", xlab=input$outcome)
     
     # set density line
-    xfit<-seq(min(swiss[,input$outcome]),max(swiss[,input$outcome]),length=40) 
-    yfit<-dnorm(xfit,mean=mean(swiss[,input$outcome]),sd=sd(swiss[,input$outcome])) 
-    yfit <- yfit*diff(h$mids[1:2])*length(swiss[,input$outcome]) 
+    xfit<-seq(min(subset[,input$outcome]),max(subset[,input$outcome]),length=40) 
+    yfit<-dnorm(xfit,mean=mean(subset[,input$outcome]),sd=sd(subset[,input$outcome])) 
+    yfit <- yfit*diff(h$mids[1:2])*length(subset[,input$outcome]) 
     lines(xfit, yfit, col="blue", lwd=2)
     
     for(i in input$location){
       switch(i, 
              "Mean"={
-               abline(v = mean(swiss[,input$outcome]),
+               abline(v = mean(subset[,input$outcome]),
                       col = "green",
                       lwd = 2)
              },
              "Median"={
-               abline(v = median(swiss[,input$outcome]),
+               abline(v = median(subset[,input$outcome]),
                       col = "red",
                       lwd = 2)   
              }
@@ -119,7 +122,7 @@ server <- function(input, output) {
   
   output$correlation <- renderText({
     if(input$plot == "scatter") {
-      cor(swiss[,input$outcome], swiss[,input$indepvar], method = c("pearson"));
+      cor(subset[,input$outcome], subset[,input$indepvar], method = c("pearson"));
     }
   })
   
@@ -127,9 +130,9 @@ server <- function(input, output) {
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
                tags$thead(tags$tr(tags$th("Measure"), tags$th("Value"))),
                tags$tbody(
-                 tags$tr(tags$th("Skewness"), tags$td(skewness(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Kurtosis / Excess"), tags$td(kurtosis(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Variance"), tags$td(var(swiss[,input$outcome])))
+                 tags$tr(tags$th("Skewness"), tags$td(skewness(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Kurtosis / Excess"), tags$td(kurtosis(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Variance"), tags$td(var(filtered()[,input$outcome])))
                )
     )
   )
@@ -138,10 +141,10 @@ server <- function(input, output) {
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
                tags$thead(tags$tr(tags$th("Location"), tags$th("Value"))),
                tags$tbody(
-                 tags$tr(tags$th("Mean"), tags$td(mean(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Median"), tags$td(median(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Weighted Mean"), tags$td(weighted.mean(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Trimmed Mean (10%)"), tags$td(mean(swiss[,input$outcome], trim = 0.10)))
+                 tags$tr(tags$th("Mean"), tags$td(mean(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Median"), tags$td(median(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Weighted Mean"), tags$td(weighted.mean(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Trimmed Mean (10%)"), tags$td(mean(filtered()[,input$outcome], trim = 0.10)))
                )
     )
   )
@@ -150,10 +153,10 @@ server <- function(input, output) {
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
                tags$thead(tags$tr(tags$th("Variation"), tags$th("Value"))),
                tags$tbody(
-                 tags$tr(tags$th("Variance"), tags$td(var(swiss[,input$outcome]))),
-                 tags$tr(tags$th("Standard Deviation"), tags$td(sd(swiss[,input$outcome]))),
-                 # tags$tr(tags$th("Range"), tags$td(range(swiss[,input$outcome]))), # error here
-                 tags$tr(tags$th("MAD (median)"), tags$td(mad(swiss[,input$outcome])))
+                 tags$tr(tags$th("Variance"), tags$td(var(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Standard Deviation"), tags$td(sd(filtered()[,input$outcome]))),
+                 # tags$tr(tags$th("Range"), tags$td(range(filtered()[,input$outcome]))), # error here
+                 tags$tr(tags$th("MAD (median)"), tags$td(mad(filtered()[,input$outcome])))
                )
     )
   )
@@ -173,27 +176,34 @@ server <- function(input, output) {
       if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
       text(0.5, 0.5, txt, cex = cex.cor * r)
     }
-    pairs(swiss, lower.panel = panel.smooth, upper.panel = panel.cor, main="Scatterplot Matrix")
+    pairs(filtered(), lower.panel = panel.smooth, upper.panel = panel.cor, main="Scatterplot Matrix")
   })
   
   output$corsummary <- renderPrint({
-    fit <- lm(Education ~ ., swiss)
+    fit <- lm(Education ~ ., filtered())
     summary(fit)
   })
   
   output$lmplot <- renderPlot({
     if(length(input$indepvar) == 0) return;
-    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=filtered())
     par(mfrow=c(2,2))
     plot(fit)
   })
   
   output$lmsummary <- renderPrint({
     if(length(input$indepvar) == 0) return;
-    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=filtered())
     summary(fit)
   })
   
+  filtered <- function() {
+    subset <- swiss
+    for(i in input$outliers) {
+      subset <- swiss[!(row.names(swiss) %in% input$outliers),]
+    }
+    return(subset)
+  }
 }
 
 shinyApp(ui = ui, server = server)
