@@ -10,6 +10,7 @@ adult_died <- subset(adult, Survived == 'No')
 adult_survived <- subset(adult, Survived == 'Yes')
 child_died <- subset(child, Survived == 'No')
 child_survived <- subset(child, Survived == 'Yes')
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
@@ -20,14 +21,23 @@ ui <- fluidPage(
    sidebarLayout(
       sidebarPanel(
         selectInput("plot", label = h3("Select visualisation:"),
-                    choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot", "Mosaicplot" = "mosaic"), selected = "mosaic"),
-        selectInput("variables", label = h3("Select variables"),names(t),multiple = T, selected = "Population")),
+                    choices = list("Barplot" = "bar", "Mosaicplot" = "mosaic"), selected = "mosaic"),
+        selectInput("variables", label = h3("Select variables"),names(t),multiple = T, selected = "Population"),
+        h3("Simpsons Paradox"),
+        tags$ul(
+          tags$li("Class, Survived"), 
+          tags$li("Class, Survived, Sex"))
+        ),
       
       # Show a plot of the generated distribution
       mainPanel(
         tabsetPanel(type = "tabs",
-                    tabPanel("Plot", plotOutput("plot", height = 800), renderTable("ftable")),
-                    tabPanel("Data", DT::dataTableOutput('tbl'), renderTable("ftbl"))) # Data as datatable)
+                    tabPanel("Plot", plotOutput("plot", height = 800)),
+                    tabPanel("Proportions", 
+                      fluidRow(
+                        column(DT::dataTableOutput("propTable1"),width = 6),
+                        column(DT::dataTableOutput("propTable2"),width = 6))),
+                    tabPanel("Data", DT::dataTableOutput('tbl'))) # Data as datatable)
       )
    )
 )
@@ -37,13 +47,9 @@ server <- function(input, output) {
    
    output$plot <- renderPlot({
      if(input$plot == "bar") {
-       # TODO - which plots are appropriate here ?
-     }
-     else if (input$plot == "scatter") {
-       # TODO - which plots are appropriate here ?
-     }
-     else if (input$plot == "qqplot") {
-       # TODO - which plots are appropriate here ?
+       prop <- prop.table(apply(Titanic, c(1, 4), sum), margin = 1) * 100
+       prop <- round(prop, digits = 2)
+       barplot(t(prop), beside = FALSE)
      }
      else if (input$plot == "mosaic") {
         #str(Titanic)
@@ -61,9 +67,17 @@ server <- function(input, output) {
      DT::datatable(t, options = list(lengthChange = FALSE))
    })
    
-   output$ftbl = renderTable({
-     ftable(Titanic, row.vars = 2:1, col.vars = "Survived")
+   output$propTable1 = DT::renderDataTable({
+      prop <- prop.table(apply(Titanic, c(1, 4), sum), margin = 1) * 100
+      prop <- round(prop, digits = 2)
+      DT::datatable(prop, options = list(lengthChange = FALSE))
    })
+   
+   output$propTable2 = DT::renderDataTable({
+     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = "Survived"),1) * 100, digits = 2)
+     DT::datatable(prop, options = list(lengthChange = FALSE, paging = FALSE))
+   })
+   
 }
 
 # Run the application 
