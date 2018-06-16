@@ -161,7 +161,7 @@ server <- function(input, output) {
   
   output$correlation <- renderText({
     if(input$plot == "scatter") {
-      cor(subset[,input$outcome], subset[,input$indepvar], method = c("pearson"));
+      cor(filtered()[,input$outcome], filtered()[,input$indepvar], method = c("pearson"));
     }
   })
   
