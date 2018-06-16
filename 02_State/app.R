@@ -3,7 +3,8 @@ library(DT)
 library(moments)
 dat <- as.data.frame(state.x77)
 colnames(dat)[4] = "Life.Exp"    
-colnames(dat)[6] = "HS.Grad"
+colnames(dat)[6] = "HS.Grade"
+dat[8] = NULL
 
 ui <- fluidPage(
   titlePanel("Exercise 2 - Dataset: State"),
