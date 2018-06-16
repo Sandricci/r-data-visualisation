@@ -16,7 +16,7 @@ ui <- fluidPage(
                   choices = rownames(swiss), multiple=T, selected = 1),
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
-                                        "Median" = "Median"), selected = 1)
+                                        "Median" = "Median", "Modus" = "Modus", "Midrange" = "Midrange"), selected = 1)
     ),
     
     mainPanel(
@@ -71,7 +71,36 @@ server <- function(input, output) {
       qqline(subset[,input$outcome], col="red")
     }
     else if (input$plot == "bar") {
-      barplot(subset[,input$outcome], xlab=input$outcome)
+      barplot(subset[,input$outcome], xlab=input$outcome, col = "black")
+      for(i in input$location){
+        switch(i, 
+               "Mean"={
+                 abline(h = mean(subset[,input$outcome]),
+                        col = "green",
+                        lwd = 2)
+               },
+               "Median"={
+                 abline(h = median(subset[,input$outcome]),
+                        col = "red",
+                        lwd = 2)   
+               },
+               "Modus"={
+                 abline(h = Mode(subset[,input$outcome]),
+                        col = "blue",
+                        lwd = 2)   
+               },
+               "Midrange"={
+                 abline(h = Midrange(subset[,input$outcome]),
+                        col = "orange",
+                        lwd = 2)   
+               }
+        )
+      }
+      # show legend
+      legend(x = "topright",
+             c("Mean", "Median", "Modus", "Midrange"),
+             col = c("green", "red", "blue", "orange"),
+             lwd = c(2, 2))
     }
   })
   
@@ -96,7 +125,7 @@ server <- function(input, output) {
     xfit<-seq(min(subset[,input$outcome]),max(subset[,input$outcome]),length=40) 
     yfit<-dnorm(xfit,mean=mean(subset[,input$outcome]),sd=sd(subset[,input$outcome])) 
     yfit <- yfit*diff(h$mids[1:2])*length(subset[,input$outcome]) 
-    lines(xfit, yfit, col="blue", lwd=2)
+    lines(xfit, yfit, col="darkred", lwd=2)
     
     for(i in input$location){
       switch(i, 
@@ -109,14 +138,24 @@ server <- function(input, output) {
                abline(v = median(subset[,input$outcome]),
                       col = "red",
                       lwd = 2)   
+             },
+             "Modus"={
+               abline(v = Mode(subset[,input$outcome]),
+                      col = "blue",
+                      lwd = 2)   
+             },
+             "Midrange"={
+               abline(v = Midrange(subset[,input$outcome]),
+                      col = "orange",
+                      lwd = 2)   
              }
       )
     }
     
     # show legend
     legend(x = "topright",
-           c("Density plot", "Mean", "Median", "Weighted Mean"),
-           col = c("blue", "green", "red", "orange"),
+           c("Density plot", "Mean", "Median", "Mode", "Midrange"),
+           col = c("darkred", "green", "red", "blue", "orange"),
            lwd = c(2, 2, 2, 2))
   })
   
@@ -128,7 +167,7 @@ server <- function(input, output) {
   
   output$measures <- renderUI({tagList(
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
-               tags$thead(tags$tr(tags$th("Measure"), tags$th("Value"))),
+               tags$thead(tags$tr(tags$th("Measure", width=200), tags$th("Value", width=200))),
                tags$tbody(
                  tags$tr(tags$th("Skewness"), tags$td(skewness(filtered()[,input$outcome]))),
                  tags$tr(tags$th("Kurtosis / Excess"), tags$td(kurtosis(filtered()[,input$outcome]))),
@@ -139,11 +178,12 @@ server <- function(input, output) {
   })
   output$locations <- renderUI({tagList(
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
-               tags$thead(tags$tr(tags$th("Location"), tags$th("Value"))),
+               tags$thead(tags$tr(tags$th("Location", width=200), tags$th("Value", width=200))),
                tags$tbody(
                  tags$tr(tags$th("Mean"), tags$td(mean(filtered()[,input$outcome]))),
                  tags$tr(tags$th("Median"), tags$td(median(filtered()[,input$outcome]))),
-                 tags$tr(tags$th("Weighted Mean"), tags$td(weighted.mean(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Modus"), tags$td(Mode(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Midrange"), tags$td(Midrange(filtered()[,input$outcome]))),
                  tags$tr(tags$th("Trimmed Mean (10%)"), tags$td(mean(filtered()[,input$outcome], trim = 0.10)))
                )
     )
@@ -151,7 +191,7 @@ server <- function(input, output) {
   })
   output$variations <- renderUI({tagList(
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
-               tags$thead(tags$tr(tags$th("Variation"), tags$th("Value"))),
+               tags$thead(tags$tr(tags$th("Variation", width=200), tags$th("Value", width=200))),
                tags$tbody(
                  tags$tr(tags$th("Variance"), tags$td(var(filtered()[,input$outcome]))),
                  tags$tr(tags$th("Standard Deviation"), tags$td(sd(filtered()[,input$outcome]))),
@@ -203,6 +243,15 @@ server <- function(input, output) {
       subset <- swiss[!(row.names(swiss) %in% input$outliers),]
     }
     return(subset)
+  }
+  
+  Mode <- function(x) {
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
+  }
+  
+  Midrange <- function(x) {
+    (max(x) + min(x)) / 2
   }
 }
 

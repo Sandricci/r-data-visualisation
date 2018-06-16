@@ -1,6 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(moments)
+t <- as.data.frame(Titanic)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
