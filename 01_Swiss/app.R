@@ -15,7 +15,7 @@ ui <- fluidPage(
       
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
-                                        "Median" = "Median", "Weighted Mean" = "Weighted"), selected = 1)
+                                        "Median" = "Median"), selected = 1)
     ),
     
     mainPanel(
@@ -106,11 +106,6 @@ server <- function(input, output) {
                abline(v = median(swiss[,input$outcome]),
                       col = "red",
                       lwd = 2)   
-             },
-             "Weighted"={
-               abline(v = weighted.mean(swiss[,input$outcome]),
-                      col = "orange",
-                      lwd = 2)
              }
       )
     }
@@ -182,24 +177,21 @@ server <- function(input, output) {
   })
   
   output$corsummary <- renderPrint({
-    lm <- lm(Education ~ ., swiss)
-    summary(lm)
+    fit <- lm(Education ~ ., swiss)
+    summary(fit)
   })
   
   output$lmplot <- renderPlot({
     if(length(input$indepvar) == 0) return;
-    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
     par(mfrow=c(2,2))
-    plot(lm, which=1)
-    plot(lm, which=2)
-    plot(lm, which=3)
-    plot(lm, which=4)
+    plot(fit)
   })
   
   output$lmsummary <- renderPrint({
     if(length(input$indepvar) == 0) return;
-    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
-    summary(lm)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=swiss)
+    summary(fit)
   })
   
 }
