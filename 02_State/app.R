@@ -2,7 +2,8 @@ library(shiny)
 library(DT)
 library(moments)
 dat <- as.data.frame(state.x77)
-head(dat)
+colnames(dat)[4] = "Life.Exp"    
+colnames(dat)[6] = "HS.Grad"
 
 ui <- fluidPage(
   titlePanel("Exercise 2 - Dataset: State"),
@@ -17,7 +18,7 @@ ui <- fluidPage(
       
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
-                                        "Median" = "Median", "Weighted Mean" = "Weighted"), selected = 1)
+                                        "Median" = "Median"), selected = 1)
     ),
     
     mainPanel(
@@ -25,8 +26,11 @@ ui <- fluidPage(
       tabsetPanel(type = "tabs",
                   
                   tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation"), 
-                           htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), 
-                           renderPlot("lm")),
+                           fluidRow(
+                             column(htmlOutput("measures"), width = 6), 
+                             column(htmlOutput("locations"), width = 6),
+                             column(htmlOutput("variations"), width = 6))
+                           ),
                   tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
                   tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
                   tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),
@@ -75,10 +79,6 @@ server <- function(input, output) {
     }
   })
   
-  output$lm <- renderPlot({
-    simple.fit <- lm(Murder~Population, data = dat)
-  })
-  
   # Plot boxplot
   output$distboxplot <- renderPlot({
     # without frame: frame = F
@@ -108,18 +108,13 @@ server <- function(input, output) {
                abline(v = median(dat[,input$outcome]),
                       col = "red",
                       lwd = 2)   
-             },
-             "Weighted"={
-               abline(v = weighted.mean(dat[,input$outcome]),
-                      col = "orange",
-                      lwd = 2)
              }
       )
     }
     
     # show legend
     legend(x = "topright",
-           c("Density plot", "Mean", "Median", "Weighted Mean"),
+           c("Density plot", "Mean", "Median"),
            col = c("blue", "green", "red", "orange"),
            lwd = c(2, 2, 2, 2))
   })
@@ -184,24 +179,21 @@ server <- function(input, output) {
   })
   
   output$corsummary <- renderPrint({
-    lm <- lm(Murder ~ ., dat)
-    summary(lm)
+    fit <- lm(Murder ~ ., dat)
+    summary(fit)
   })
   
   output$lmplot <- renderPlot({
     if(length(input$indepvar) == 0) return;
-    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=dat)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste0(input$indepvar,collapse="+"))), data=dat)
     par(mfrow=c(2,2))
-    plot(lm, which=1)
-    plot(lm, which=2)
-    plot(lm, which=3)
-    plot(lm, which=4)
+    plot(fit)
   })
   
   output$lmsummary <- renderPrint({
     if(length(input$indepvar) == 0) return;
-    lm <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=dat)
-    summary(lm)
+    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=dat)
+    summary(fit)
   })
   
 }
