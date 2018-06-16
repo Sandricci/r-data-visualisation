@@ -1,6 +1,8 @@
 library(shiny)
 library(DT)
 library(moments)
+t <- swiss
+t[3] = NULL
 
 ui <- fluidPage(
   titlePanel("Exercise 1 - Dataset: Swiss"),
@@ -11,7 +13,7 @@ ui <- fluidPage(
       
       selectInput("outcome", label = h3("Select variable"), names(swiss), selected = "Education"),
       
-      selectInput("indepvar", label = h3("Select second variable"),names(swiss),multiple = T, selected = "Fertility"),
+      selectInput("indepvar", label = h3("Select second variable"),names(t),multiple = T, selected = "Fertility"),
       selectInput("outliers", label = h3("Remove Outlier(s)"), 
                   choices = rownames(swiss), multiple=T, selected = 1),
       checkboxGroupInput("location", label = h3("Select location"), 
