@@ -1,14 +1,14 @@
 library(shiny)
 library(ggplot2)
 library(moments)
+library(purrr)
 t <- as.data.frame(Titanic)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Titanic Tragedy and its Simpson Paradox"),
-   
+   titlePanel("Titanic Tragedy and its Simpson Paradox"),
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
