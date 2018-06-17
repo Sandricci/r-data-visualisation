@@ -36,7 +36,7 @@ ui <- fluidPage(
                   tabPanel("Moments, Location, Variation", 
                           column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
                   tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
-                  tabPanel("Correlations", plotOutput("corplot"), verbatimTextOutput("corsummary")),
+                  tabPanel("Correlations", plotOutput("corplot", height = 800), verbatimTextOutput("corsummary")),
                   tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),
                   tabPanel("Summary", verbatimTextOutput("summary"), verbatimTextOutput("lmsummary")),
                   tabPanel("Data", DT::dataTableOutput('tbl')) # Data as datatable
