@@ -1,13 +1,14 @@
 library(shiny)
 library(DT)
 library(moments)
+library(vioplot)
 
 ui <- fluidPage(
   titlePanel("Exercise 3 - Dataset: LakeHuron"),
   sidebarLayout(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
-                  choices = list("Plot" = "plot", "Time Series" = "series", "QQ-Plot" = "qqplot","Scatterplot" = "scatter", "ACF" = "acf"), selected = "plot"),
+                  choices = list("Plot" = "plot", "Time Series" = "series", "QQ-Plot" = "qqplot","Scatterplot" = "scatter", "ACF" = "acf", "Vioplot" = "vioplot"), selected = "plot"),
       
       selectInput("lags", label = h3("Number of lags:"),
                   choices = c(1:9), selected = 1),
@@ -56,7 +57,9 @@ server <- function(input, output) {
     else if(input$plot == "acf") {
       acf(LakeHuron, main ="Estimation of Auto-Correlation Function (ACF)") 
     } 
-    
+    else if (input$plot == "vioplot") {
+      vioplot(LakeHuron, horizontal = T, col = "darkseagreen1")
+    }
   })
   
   # TODO
