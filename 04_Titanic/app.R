@@ -15,11 +15,24 @@ ui <- fluidPage(
         selectInput("plot", label = h3("Select visualisation:"),
                     choices = list("Barplot" = "bar", "Mosaicplot" = "mosaic"), selected = "mosaic"),
         selectInput("variables", label = h3("Select variables"),names(t),multiple = T, selected = "Population"),
-        h3("Simpsons Paradox"),
+        h3("Simpsons Paradox 1"),
         tags$ul(
+          tags$li("~25 % survivors 3rd and crew class"),
           tags$li("Class, Survived"), 
-          tags$li("Class, Survived, Sex"))
-        ),
+          tags$li("Class, Survived, Sex -> F: 3rd: 46%,Crew: 87%"),
+          tags$li("-> better surival rates for women")),
+      h3("Simpsons Paradox 2"),
+      tags$ul(
+        tags$li("Young Survivors 3rd Class > 1st Class"),
+        tags$li("Class, Survived, Age"),
+        tags$li("-> 1st class 100%, 3rd class 34%" )),
+      h3("Simpsons Paradox 3"),
+      tags$ul(
+        tags$li("male survivors 2nd = 2* 1st class children survivors"),
+        tags$li("Class, Survived, Age, Sex"),
+        tags$li("true, but 100% Children, 20% 2nd Class Men survived")
+      )
+   ),
       
       # Show a plot of the generated distribution
       mainPanel(
@@ -66,7 +79,7 @@ server <- function(input, output) {
    })
    
    output$propTable2 = DT::renderDataTable({
-     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = "Survived"),1) * 100, digits = 2)
+     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = 3:4)) * 100, digits = 2)
      DT::datatable(prop, options = list(lengthChange = FALSE, paging = FALSE))
    })
    
