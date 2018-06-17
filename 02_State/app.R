@@ -21,14 +21,17 @@ ui <- fluidPage(
                          choices = rownames(original), multiple=T, selected = 1),
       checkboxGroupInput("location", label = h3("Select location"), 
                          choices = list("Mean" = "Mean",
-                                        "Median" = "Median", "Modus" = "Modus", "Midrange" = "Midrange"), selected = 1)
+                                        "Median" = "Median", "Modus" = "Modus", "Midrange" = "Midrange"), selected = 1),
+      h3("Transform Axis"),
+      checkboxInput("logx", label = "log(x)", value = FALSE),
+      checkboxInput("logy", label = "log(y)", value = FALSE)
     ),
     
     mainPanel(
       
       tabsetPanel(type = "tabs",
                   
-                  tabPanel("Plot", plotOutput("plot"), verbatimTextOutput("correlation")),
+                  tabPanel("Plot", plotOutput("plot"), htmlOutput("correlation")),
                   tabPanel("Moments, Location, Variation", 
                           column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
                   tabPanel("Distribution", plotOutput("distplot"), plotOutput("distboxplot")),
@@ -47,8 +50,7 @@ server <- function(input, output) {
   
   # Regression output
   output$summary <- renderPrint({
-    fit <- filtered()[,input$outcome]
-    summary(fit)
+    summary(filtered()[,input$outcome])
   })
   
   # Data output
@@ -157,10 +159,17 @@ server <- function(input, output) {
            lwd = c(2, 2, 2, 2))
   })
   
-  output$correlation <- renderText({
-    subset <- filtered()
+  output$correlation <- renderUI({
     if(input$plot == "scatter") {
-      cor(subset[,input$outcome], subset[,input$indepvar], method = c("pearson"));
+      subset <- filtered()
+      pearson <- cor(subset[,input$outcome], subset[,input$indepvar], method = c("pearson"))
+      spearman <- cor(subset[,input$outcome], subset[,input$indepvar], method = c("spearman"))
+      tagList(
+        tags$table(class="table table-condensed table-bordered table-striped table-hover", 
+                 tags$thead(tags$tr(tags$th("Method"), tags$th("Correlation"))),
+                 tags$tbody(tags$tr(tags$td("Pearson (not robust)"), tags$td(pearson)), 
+                            tags$tr(tags$td("Spearman (robust)"), tags$td(spearman)))
+        ))
     }
   })
   
@@ -170,8 +179,8 @@ server <- function(input, output) {
       tags$table(class="table table-condensed table-bordered table-striped table-hover",
                tags$thead(tags$tr(tags$th("Measure", width=200), tags$th("Value", width=200))),
                tags$tbody(
-                 tags$tr(tags$th("Skewness"), tags$td(skewness(subset[,input$outcome]))),
-                 tags$tr(tags$th("Kurtosis / Excess"), tags$td(kurtosis(subset[,input$outcome]))),
+                 tags$tr(tags$th("Skewness (not robust)"), tags$td(skewness(subset[,input$outcome]))),
+                 tags$tr(tags$th("Kurtosis  / Excess (not robust)"), tags$td(kurtosis(subset[,input$outcome]))),
                  tags$tr(tags$th("Variance"), tags$td(var(subset[,input$outcome])))
                )
     )
@@ -198,9 +207,12 @@ server <- function(input, output) {
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
                tags$thead(tags$tr(tags$th("Variation", width=200), tags$th("Value", width=200))),
                tags$tbody(
-                 tags$tr(tags$th("Variance"), tags$td(var(subset[,input$outcome]))),
-                 tags$tr(tags$th("Standard Deviation"), tags$td(sd(subset[,input$outcome]))),
-                 tags$tr(tags$th("MAD (median)"), tags$td(mad(subset[,input$outcome])))
+                 tags$tr(tags$th("Variance"), tags$td(var(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Standard Deviation"), tags$td(sd(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("MAD (median)"), tags$td(mad(filtered()[,input$outcome], center = median(filtered()[,input$outcome])))),
+                 tags$tr(tags$th("MAD (mean)"), tags$td(mad(filtered()[,input$outcome], center = mean(filtered()[,input$outcome])))),
+                 tags$tr(tags$th("Medmed*)"), tags$td(Medmed(filtered()[,input$outcome]))),
+                 tags$tr(tags$th("Coefficient of Variation)"), tags$td(CoefficientOfVariation(filtered()[,input$outcome])))
                )
     )
   )
@@ -224,22 +236,18 @@ server <- function(input, output) {
   })
   
   output$corsummary <- renderPrint({
-    fit <- lm(Murder ~ ., filtered())
-    summary(fit)
+    summary(lm(Murder ~ ., filtered()))
   })
   
   output$lmplot <- renderPlot({
     if(length(input$indepvar) == 0) return;
-    fit <- lm(as.formula(paste(input$outcome," ~ ",paste0(input$indepvar,collapse="+"))), data=filtered())
     par(mfrow=c(2,2))
-    plot(fit)
+    plot(linearModel())
   })
   
   output$lmsummary <- renderPrint({
-    
     if(length(input$indepvar) == 0) return;
-    fit <- lm(as.formula(paste(input$outcome," ~ ",paste(input$indepvar,collapse="+"))), data=filtered())
-    summary(fit)
+    summary(linearModel())
   })
   
   filtered <- function() {
@@ -257,6 +265,44 @@ server <- function(input, output) {
   
   Midrange <- function(x) {
     (max(x) + min(x)) / 2
+  }
+  
+  Medmed <- function(x) {
+    median(abs(x - median(x)))
+  }
+  
+  CoefficientOfVariation <- function(x){
+    sd(x) / mean(x)
+  }
+  
+  linearModel <- function() {
+    y <- paste(input$outcome, " ~ ")
+    if(input$logx)
+      y <- paste(sprintf("log(%s)", input$outcome), " ~ ")
+    x <- paste(input$indepvar, collapse = " + ")
+    if(input$logy) {
+      xaxis <- list()
+      for(i in input$indepvar) {
+        xaxis <- append(xaxis, paste(sprintf("log(%s)", i), ""))
+      }
+      x <- xaxis
+    }
+    formula <- as.formula(paste(y, paste(x,collapse="+")))
+    model <- lm(formula, data = filtered())
+  }
+  
+  linearFormula <- function() {
+    formula <- as.formula(paste(input$outcome," ~ ", paste(input$indepvar,collapse="+")))
+  }
+  
+  logAxis <- function() {
+    logdir <- ""
+    if(input$logx)
+      logdir <- paste(logdir, "x", sep = "")
+    if(input$logy)
+      logdir <- paste(logdir, "y", sep = "")
+    print(logdir)
+    return(logdir)
   }
 }
 
