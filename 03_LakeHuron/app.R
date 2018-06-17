@@ -22,7 +22,7 @@ ui <- fluidPage(
       
       tabsetPanel(type = "tabs",
                   
-                  tabPanel("Plot", plotOutput("plot", height = 800), verbatimTextOutput("correlation")),
+                  tabPanel("Plot", plotOutput("plot", height = 800), htmlOutput("correlation")),
                   tabPanel("Moments, Location, Variation", 
                            column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
                   tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
@@ -60,8 +60,17 @@ server <- function(input, output) {
   })
   
   # TODO
-  output$correlation <- renderText({
-    cor(LakeHuron, time(LakeHuron), method = c("spearman"));
+  output$correlation <- renderUI({
+    if(input$plot == "scatter") {
+      pearson <- cor(LakeHuron, time(LakeHuron), method = c("pearson"))
+      spearman <- cor(LakeHuron, time(LakeHuron), method = c("spearman"))
+      tagList(
+        tags$table(class="table table-condensed table-bordered table-striped table-hover", 
+                   tags$thead(tags$tr(tags$th("Method"), tags$th("Correlation"))),
+                   tags$tbody(tags$tr(tags$td("Pearson"), tags$td(pearson)), 
+                              tags$tr(tags$td("Spearman*"), tags$td(spearman)))
+        ))
+    }
   })
   
   output$boxplot <- renderPlot({
@@ -147,6 +156,7 @@ server <- function(input, output) {
     )
   )
   })
+  
   output$variations <- renderUI({tagList(
     tags$h4("Variations"),
     tags$table(class="table table-condensed table-bordered table-striped table-hover",
@@ -155,11 +165,31 @@ server <- function(input, output) {
                  tags$tr(tags$th("Variance"), tags$td(var(LakeHuron))),
                  tags$tr(tags$th("Standard Deviation"), tags$td(sd(LakeHuron))),
                  tags$tr(tags$th("Range"), tags$td(range(LakeHuron))),
-                 tags$tr(tags$th("MAD (median)"), tags$td(mad(LakeHuron)))
+                 tags$tr(tags$th("MAD (median)"), tags$td(mad(LakeHuron, center = median(LakeHuron)))),
+                 tags$tr(tags$th("MAD (mean)"), tags$td(mad(LakeHuron, center = mean(LakeHuron)))),
+                 tags$tr(tags$th("Medmed)"), tags$td(Medmed(LakeHuron))),
+                 tags$tr(tags$th("Coefficient of Variation)"), tags$td(CoefficientOfVariation(LakeHuron)))
                )
     )
   )
+    
   })
+  Mode <- function(x) {
+    ux <- unique(x)
+    ux[which.max(tabulate(match(x, ux)))]
+  }
+  
+  Midrange <- function(x) {
+    (max(x) + min(x)) / 2
+  }
+  
+  Medmed <- function(x) {
+    median(abs(x - median(x)))
+  }
+  
+  CoefficientOfVariation <- function(x){
+    sd(x) / mean(x)
+  }
 }
 
 shinyApp(ui = ui, server = server)
