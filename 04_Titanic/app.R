@@ -14,7 +14,7 @@ ui <- fluidPage(
       sidebarPanel(
         selectInput("plot", label = h3("Select visualisation:"),
                     choices = list("Barplot" = "bar", "Mosaicplot" = "mosaic"), selected = "mosaic"),
-        selectInput("variables", label = h3("Select variables"),names(t),multiple = T, selected = "Population"),
+        selectInput("variables", label = h3("Select variables"),names(t),multiple = T, selected = c("Survived", "Class", "Sex")),
         h3("Simpsons Paradox 1"),
         tags$ul(
           tags$li("~25 % survivors 3rd and crew class"),
@@ -40,8 +40,10 @@ ui <- fluidPage(
                     tabPanel("Plot", plotOutput("plot", height = 800)),
                     tabPanel("Proportions", 
                       fluidRow(
-                        column(DT::dataTableOutput("propTable1"),width = 6),
-                        column(DT::dataTableOutput("propTable2"),width = 6))),
+                        column(tableOutput("contitable"), width = 12)),
+                      fluidRow(
+                        column(tableOutput("proptable"), width = 12))
+                      ),
                     tabPanel("Data", DT::dataTableOutput('tbl'))) # Data as datatable)
       )
    )
@@ -70,22 +72,22 @@ server <- function(input, output) {
      }
    })
    
+   output$contitable <- renderTable({
+     table <- apply(Titanic, unlist(map(input$variables, filterColumn )), sum)
+   })
+   
+   output$proptable <- renderTable({
+     prop<- prop.table(apply(Titanic, unlist(map(input$variables, filterColumn )), sum), margin = 1) * 100
+   })
+   
+   filterColumn <- function(column) {
+     which(names(dimnames(Titanic)) == column )
+   }
+   
    # Data output
    output$tbl = DT::renderDataTable({
      DT::datatable(t, options = list(lengthChange = FALSE))
    })
-   
-   output$propTable1 = DT::renderDataTable({
-      prop <- prop.table(apply(Titanic, c(1, 4), sum), margin = 1) * 100
-      prop <- round(prop, digits = 2)
-      DT::datatable(prop, options = list(lengthChange = FALSE))
-   })
-   
-   output$propTable2 = DT::renderDataTable({
-     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = 3:4), 1) * 100, digits = 2)
-     DT::datatable(prop, options = list(lengthChange = FALSE, paging = FALSE))
-   })
-   
 }
 
 # Run the application 
