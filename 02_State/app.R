@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(moments)
+library(vioplot)
 original <- as.data.frame(state.x77) # convert to data frame
 colnames(original)[4] = "Life.Exp" # rename due to paste as formula issues
 colnames(original)[6] = "HS.Grade" # rename due to paste as formula issues
@@ -11,7 +12,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
-                  choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot")),
+                  choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot", "Vioplot" = "vioplot")),
       
       selectInput("outcome", label = h3("Select variable"), names(original), selected = "Murder"),
       
@@ -63,7 +64,7 @@ server <- function(input, output) {
     subset <- filtered()
     if(input$plot == "scatter") {
       plot(subset[,input$indepvar], subset[,input$outcome], main="Scatterplot",
-           xlab=input$indepvar, ylab=input$outcome, pch=19)
+           xlab=input$indepvar, ylab=input$outcome, pch=19, log = logAxis())
       abline(lm(subset[,input$outcome] ~ subset[,input$indepvar]), col="red")
       lines(lowess(subset[,input$indepvar],subset[,input$outcome]), col="blue")
       
@@ -107,6 +108,9 @@ server <- function(input, output) {
              c("Mean", "Median", "Modus", "Midrange"),
              col = c("green", "red", "blue", "orange"),
              lwd = c(2, 2))
+    }
+    else if (input$plot == "vioplot") {
+      vioplot(subset[, input$outcome],horizontal = T,col = "darkseagreen1")
     }
   })
   
