@@ -40,10 +40,7 @@ ui <- fluidPage(
                     tabPanel("Plot", plotOutput("plot", height = 800)),
                     tabPanel("Proportions", 
                       fluidRow(
-                        column(tableOutput("contitable"), width = 12)),
-                      fluidRow(
-                        column(tableOutput("proptable"), width = 12))
-                      ),
+                        column(tableOutput("contitable"), width = 12))),
                     tabPanel("Data", DT::dataTableOutput('tbl'))) # Data as datatable)
       )
    )
@@ -74,11 +71,8 @@ server <- function(input, output) {
    
    output$contitable <- renderTable({
      table <- apply(Titanic, unlist(map(input$variables, filterColumn )), sum)
-   })
-   
-   output$proptable <- renderTable({
-     prop<- prop.table(apply(Titanic, unlist(map(input$variables, filterColumn )), sum), margin = 1) * 100
-   })
+     table <- addmargins(table)
+   }, rownames = TRUE)
    
    filterColumn <- function(column) {
      which(names(dimnames(Titanic)) == column )
