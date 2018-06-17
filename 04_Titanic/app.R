@@ -52,9 +52,12 @@ server <- function(input, output) {
    
    output$plot <- renderPlot({
      if(input$plot == "bar") {
-       prop <- prop.table(apply(Titanic, c(1, 4), sum), margin = 1) * 100
+       variable <- "Age"
+       if(length(input$variables) > 0)
+         variable = input$variables[[1]]
+       prop <- prop.table(apply(Titanic, c(grep(variable, colnames(t)), 4), sum), margin = 1) * 100
        prop <- round(prop, digits = 2)
-       barplot(t(prop), beside = FALSE)
+       barplot(t(prop), beside = FALSE, xlab = variable, ylab = "Surivors", legend = c("Perished", "Survived"))
      }
      else if (input$plot == "mosaic") {
         #str(Titanic)
@@ -79,7 +82,7 @@ server <- function(input, output) {
    })
    
    output$propTable2 = DT::renderDataTable({
-     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = 3:4)) * 100, digits = 2)
+     prop <- round(prop.table(ftable(Titanic, row.vars = 1:2, col.vars = 3:4), 1) * 100, digits = 2)
      DT::datatable(prop, options = list(lengthChange = FALSE, paging = FALSE))
    })
    
