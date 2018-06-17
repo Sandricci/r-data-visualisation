@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(moments)
+library(vioplot)
 t <- swiss
 t[3] = NULL
 
@@ -9,7 +10,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
-                  choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot")),
+                  choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot", "Vioplot"="vioplot")),
       
       selectInput("outcome", label = h3("Select variable"), names(swiss), selected = "Education"),
       
@@ -105,6 +106,9 @@ server <- function(input, output) {
              c("Mean", "Median", "Modus", "Midrange"),
              col = c("green", "red", "blue", "orange"),
              lwd = c(2, 2))
+    }
+    else if (input$plot == "vioplot") {
+        vioplot(subset[, input$outcome],horizontal = T,col = "darkseagreen1")
     }
   })
   
