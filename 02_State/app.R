@@ -281,10 +281,10 @@ server <- function(input, output) {
   
   linearModel <- function() {
     y <- paste(input$outcome, " ~ ")
-    if(input$logx)
+    if(input$logy)
       y <- paste(sprintf("log(%s)", input$outcome), " ~ ")
     x <- paste(input$indepvar, collapse = " + ")
-    if(input$logy) {
+    if(input$logx) {
       xaxis <- list()
       for(i in input$indepvar) {
         xaxis <- append(xaxis, paste(sprintf("log(%s)", i), ""))
