@@ -8,7 +8,7 @@ t <- as.data.frame(Titanic)
 ui <- fluidPage(
    
    # Application title
-   titlePanel("Titanic Tragedy and its Simpson Paradox"),
+   titlePanel("Titanic Tragedy and its Simpson Paradox"),
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
