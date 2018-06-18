@@ -88,7 +88,7 @@ server <- function(input, output) {
       lines(density(LakeHuron), col = "red", lwd = 2)
       lines(density(LakeHuron, adjust=2), lty="dotted", lwd = 2)
       legend(x = "topright",
-             c("Density Curve (adjust=2)", "Density Curve (adjust=2)"),
+             c("Density (adjust=1)", "Density (adjust=2)"),
              col = c("darkred", "black"), lty = c("solid", "dotted"),
              lwd = c(2, 2)) 
     }
