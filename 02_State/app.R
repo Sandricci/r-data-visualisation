@@ -67,18 +67,18 @@ server <- function(input, output) {
     if(input$plot == "scatter") {
       plot(subset[,input$indepvar], subset[,input$outcome], main="Scatterplot",
            xlab=input$indepvar, ylab=input$outcome, pch=19, log = logAxis())
-      abline(lm(subset[,input$outcome] ~ subset[,input$indepvar]), col="red")
-      lines(lowess(subset[,input$indepvar],subset[,input$outcome]), col="blue")
+      abline(lm(subset[,input$outcome] ~ subset[,input$indepvar]), col="tomato")
+      lines(lowess(subset[,input$indepvar],subset[,input$outcome]), col="navy")
       
       # show legend
       legend(x = "topright",
              c("Variable", "Second variable"),
-             col = c("blue", "red"),
+             col = c("navy", "tomato"),
              lwd = c(2, 2))
     }
     else if (input$plot == "qqplot") {
       qqnorm(subset[,input$outcome])
-      qqline(subset[,input$outcome], col="red")
+      qqline(subset[,input$outcome], col="tomato")
     }
     else if (input$plot == "bar") {
       barplot(subset[,input$outcome], xlab=input$outcome)
@@ -86,17 +86,17 @@ server <- function(input, output) {
         switch(i, 
                "Mean"={
                  abline(h = mean(subset[,input$outcome]),
-                        col = "green",
+                        col = "forest green",
                         lwd = 2)
                },
                "Median"={
                  abline(h = median(subset[,input$outcome]),
-                        col = "red",
+                        col = "tomato",
                         lwd = 2)   
                },
                "Modus"={
                  abline(h = Mode(subset[,input$outcome]),
-                        col = "blue",
+                        col = "powderblue",
                         lwd = 2)   
                },
                "Midrange"={
@@ -108,7 +108,7 @@ server <- function(input, output) {
       }
       legend(x = "topright",
              c("Mean", "Median", "Modus", "Midrange"),
-             col = c("green", "red", "blue", "orange"),
+             col = c("forest green", "tomato", "powderblue", "orange"),
              lwd = c(2, 2))
     }
     else if (input$plot == "vioplot") {
@@ -127,7 +127,7 @@ server <- function(input, output) {
     subset <- filtered()
     var <- subset[, input$outcome]
     if(input$density) {
-      hist(var, main="Histogram with Density Plot", xlab = input$outcome, freq = F, breaks = input$bins)
+      hist(var, main="Histogram with Density Plot", yaxt = "n", ylab = NULL, xaxs ="i",   xlab = input$outcome, freq = F, breaks = input$bins)
       d <- density(var)
       lines(d, col = "darkred", lwd = 2)
       lines(d, adjust=2, lty="dotted", lwd = 2)
@@ -139,28 +139,28 @@ server <- function(input, output) {
              lwd = c(2, 2)) 
     }
     else {
-      h <- hist(subset[,input$outcome], main="Histogram", xlab=input$outcome)
+      h <- hist(subset[,input$outcome], main="Histogram", xlab=input$outcome, yaxt = "n", ylab = NA, xaxs = "i")
       # set normal curve
       xfit<-seq(min(var),max(var),length=40) 
       yfit<-dnorm(xfit,mean=mean(var),sd=sd(var)) 
       yfit <- yfit*diff(h$mids[1:2])*length(var) 
-      lines(xfit, yfit, col="darkred", lwd=2)
+      lines(xfit, yfit, col="navy", lwd=2)
       
       for(i in input$location){
         switch(i, 
                "Mean"={
                  abline(v = mean(var),
-                        col = "lightblue",
+                        col = "forest green",
                         lwd = 2)
                },
                "Median"={
                  abline(v = median(var),
-                        col = "red",
+                        col = "tomato",
                         lwd = 2)   
                },
                "Modus"={
                  abline(v = Mode(var),
-                        col = "blue",
+                        col = "powderblue",
                         lwd = 2)   
                },
                "Midrange"={
@@ -174,7 +174,7 @@ server <- function(input, output) {
       # show legend
       legend(x = "topright",
              c("Normal Curve", "Mean", "Median", "Mode", "Midrange"),
-             col = c("darkred", "lightblue", "red", "blue",  "orange"),
+             col = c("navy", "forest green", "tomato", "powderblue",  "orange"),
              lwd = c(2, 2, 2, 2)) 
     }
   })

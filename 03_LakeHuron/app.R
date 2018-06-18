@@ -52,23 +52,27 @@ server <- function(input, output) {
         switch(i, 
                "Mean"={
                  abline(h = mean(LakeHuron),
-                        col = "green",
+                        col = "forest green",
                         lwd = 2)
                },
                "Median"={
                  abline(h = median(LakeHuron),
-                        col = "red",
+                        col = "tomato",
                         lwd = 2)   
                }
         )
       }
+      legend(x = "topright",
+             c("Mean", "Median"),
+             col = c("forest green", "tomato"),
+             lwd = c(2,2)) 
     }
     else if(input$plot == "scatter") {
       plot(LakeHuron, time(LakeHuron), ylab="depth (in feet)", xlab = "Time (in years)") 
     }
     else if (input$plot == "qqplot") {
       qqnorm(LakeHuron)
-      qqline(LakeHuron, col="red")
+      qqline(LakeHuron, col="tomato")
     }
     else if(input$plot == "acf") {
       acf(LakeHuron, main ="Estimation of Auto-Correlation Function (ACF)") 
@@ -98,34 +102,34 @@ server <- function(input, output) {
   
   output$distribution <- renderPlot({
     if(input$density) {
-      hist(LakeHuron, main = "Histogram with Density Plot", breaks = input$bins, freq = FALSE)
+      hist(LakeHuron, main = "Histogram with Density Plot", yaxt = "n", ylab = NULL, xaxs ="i", breaks = input$bins, freq = FALSE)
       d <- density(LakeHuron)
-      lines(d, col = "darkred", lwd = 2)
+      lines(d, col = "tomato", lwd = 2)
       polygon(d, col = rgb(1,0.5,0.2 ,0.5))
       legend(x = "topright",
              c("Density"),
-             col = c("darkred"), lty = c("solid"),
+             col = c("tomato"), lty = c("solid"),
              lwd = c(2)) 
     }
     else {
-      h <- hist(LakeHuron, main="", xlab= time(LakeHuron))
+      h <- hist(LakeHuron, main="Histogram (Counts)", xlab= time(LakeHuron), yaxt = "n", ylab = NULL, xaxs ="i",)
       
       # set normal curve
       xfit<-seq(min(LakeHuron),max(LakeHuron),length=40) 
       yfit<-dnorm(xfit,mean=mean(LakeHuron),sd=sd(LakeHuron)) 
       yfit <- yfit*diff(h$mids[1:2])*length(LakeHuron) 
-      lines(xfit, yfit, col="blue", lwd=2)
+      lines(xfit, yfit, col="navy", lwd=2)
       
       for(i in input$location){
         switch(i, 
                "Mean"={
                  abline(v = mean(LakeHuron),
-                        col = "green",
+                        col = "forest green",
                         lwd = 2)
                },
                "Median"={
                  abline(v = median(LakeHuron),
-                        col = "red",
+                        col = "tomato",
                         lwd = 2)   
                }
         )
@@ -134,7 +138,7 @@ server <- function(input, output) {
       # show legend
       legend(x = "topright",
              c("Normal Curve", "Mean", "Median"),
-             col = c("blue", "green", "red"),
+             col = c("navy", "forest green", "tomato"),
              lwd = c(2, 2, 2)) 
     }
   })
