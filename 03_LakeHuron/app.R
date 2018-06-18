@@ -48,6 +48,20 @@ server <- function(input, output) {
     }
     else if(input$plot == "plot") {
       plot(LakeHuron, ylab="depth (in feet)", xlab = "Time (in years)") 
+      for(i in input$location){
+        switch(i, 
+               "Mean"={
+                 abline(h = mean(LakeHuron),
+                        col = "green",
+                        lwd = 2)
+               },
+               "Median"={
+                 abline(h = median(LakeHuron),
+                        col = "red",
+                        lwd = 2)   
+               }
+        )
+      }
     }
     else if(input$plot == "scatter") {
       plot(LakeHuron, time(LakeHuron), ylab="depth (in feet)", xlab = "Time (in years)") 
