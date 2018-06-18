@@ -11,9 +11,10 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
                   choices = list("Bar" = "bar", "Scatterplot" = "scatter", "Q-Q-Plot" = "qqplot", "Vioplot"="vioplot")),
-      
+      checkboxInput("density", label = "Show Density Plot", value = FALSE),
+      sliderInput("bins", label = "Number of bins (Histogram)",
+                  min = 1, max = 20, value = 5, step = 1),
       selectInput("outcome", label = h3("Select variable"), names(swiss), selected = "Education"),
-      
       selectInput("indepvar", label = h3("Select second variable"),names(t),multiple = T, selected = "Fertility"),
       selectInput("outliers", label = h3("Remove Outlier(s)"), 
                   choices = rownames(swiss), multiple=T, selected = 1),
@@ -121,44 +122,57 @@ server <- function(input, output) {
   # Histogram output for distribution
   output$distplot <- renderPlot({
     subset <- filtered()
-    h <- hist(subset[,input$outcome], main="Histogram", xlab=input$outcome)
-    
-    # set density line
-    xfit<-seq(min(subset[,input$outcome]),max(subset[,input$outcome]),length=40) 
-    yfit<-dnorm(xfit,mean=mean(subset[,input$outcome]),sd=sd(subset[,input$outcome])) 
-    yfit <- yfit*diff(h$mids[1:2])*length(subset[,input$outcome]) 
-    lines(xfit, yfit, col="darkred", lwd=2)
-    
-    for(i in input$location){
-      switch(i, 
-             "Mean"={
-               abline(v = mean(subset[,input$outcome]),
-                      col = "green",
-                      lwd = 2)
-             },
-             "Median"={
-               abline(v = median(subset[,input$outcome]),
-                      col = "red",
-                      lwd = 2)   
-             },
-             "Modus"={
-               abline(v = Mode(subset[,input$outcome]),
-                      col = "blue",
-                      lwd = 2)   
-             },
-             "Midrange"={
-               abline(v = Midrange(subset[,input$outcome]),
-                      col = "orange",
-                      lwd = 2)   
-             }
-      )
+    var <- subset[, input$outcome]
+    if(input$density) {
+      hist(var, main="Histogram with Density Plot", xlab = input$outcome, freq = F, breaks = input$bins)
+      d <- density(var)
+      lines(d, col = "red", lwd = 2)
+      lines(d, adjust=2, lty="dotted", lwd = 2)
+      # show legend
+      legend(x = "topright",
+             c("Density Curve (adjust=2)", "Density Curve (adjust=2)"),
+             col = c("darkred", "black"), lty = c("solid", "dotted"),
+             lwd = c(2, 2)) 
     }
-    
-    # show legend
-    legend(x = "topright",
-           c("Density plot", "Mean", "Median", "Mode", "Midrange"),
-           col = c("darkred", "green", "red", "blue", "orange"),
-           lwd = c(2, 2, 2, 2))
+    else {
+      h <- hist(subset[,input$outcome], main="Histogram", xlab=input$outcome)
+      # set normal curve
+      xfit<-seq(min(var),max(var),length=40) 
+      yfit<-dnorm(xfit,mean=mean(var),sd=sd(var)) 
+      yfit <- yfit*diff(h$mids[1:2])*length(var) 
+      lines(xfit, yfit, col="darkred", lwd=2)
+      
+      for(i in input$location){
+        switch(i, 
+               "Mean"={
+                 abline(v = mean(var),
+                        col = "lightblue",
+                        lwd = 2)
+               },
+               "Median"={
+                 abline(v = median(var),
+                        col = "red",
+                        lwd = 2)   
+               },
+               "Modus"={
+                 abline(v = Mode(var),
+                        col = "blue",
+                        lwd = 2)   
+               },
+               "Midrange"={
+                 abline(v = Midrange(var),
+                        col = "orange",
+                        lwd = 2)   
+               }
+        )
+      }
+      
+      # show legend
+      legend(x = "topright",
+             c("Normal Curve", "Mean", "Median", "Mode", "Midrange"),
+             col = c("darkred", "lightblue", "red", "blue",  "orange"),
+             lwd = c(2, 2, 2, 2)) 
+    }
   })
   
   output$correlation <- renderUI({

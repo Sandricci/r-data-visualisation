@@ -9,7 +9,9 @@ ui <- fluidPage(
     sidebarPanel(
       selectInput("plot", label = h3("Select visualisation:"),
                   choices = list("Plot" = "plot", "Time Series" = "series", "QQ-Plot" = "qqplot","Scatterplot" = "scatter", "ACF" = "acf", "Vioplot" = "vioplot"), selected = "plot"),
-      
+      checkboxInput("density", label = "Show Density Plot", value = FALSE),
+      sliderInput("bins", label = "Number of bins (Histogram)",
+                  min = 1, max = 20, value = 5, step = 1),
       selectInput("lags", label = h3("Number of lags:"),
                   choices = c(1:9), selected = 1),
       
@@ -81,15 +83,25 @@ server <- function(input, output) {
   })
   
   output$distribution <- renderPlot({
-    h <- hist(LakeHuron, main="", xlab= time(LakeHuron))
-    
-    # set density line
-    xfit<-seq(min(LakeHuron),max(LakeHuron),length=40) 
-    yfit<-dnorm(xfit,mean=mean(LakeHuron),sd=sd(LakeHuron)) 
-    yfit <- yfit*diff(h$mids[1:2])*length(LakeHuron) 
-    lines(xfit, yfit, col="blue", lwd=2)
-    
-    for(i in input$location){
+    if(input$density) {
+      hist(LakeHuron, main = "Histogram with Density Plot", breaks = input$bins, freq = FALSE)
+      lines(density(LakeHuron), col = "red", lwd = 2)
+      lines(density(LakeHuron, adjust=2), lty="dotted", lwd = 2)
+      legend(x = "topright",
+             c("Density Curve (adjust=2)", "Density Curve (adjust=2)"),
+             col = c("darkred", "black"), lty = c("solid", "dotted"),
+             lwd = c(2, 2)) 
+    }
+    else {
+      h <- hist(LakeHuron, main="", xlab= time(LakeHuron))
+      
+      # set normal curve
+      xfit<-seq(min(LakeHuron),max(LakeHuron),length=40) 
+      yfit<-dnorm(xfit,mean=mean(LakeHuron),sd=sd(LakeHuron)) 
+      yfit <- yfit*diff(h$mids[1:2])*length(LakeHuron) 
+      lines(xfit, yfit, col="blue", lwd=2)
+      
+      for(i in input$location){
         switch(i, 
                "Mean"={
                  abline(v = mean(LakeHuron),
@@ -102,13 +114,14 @@ server <- function(input, output) {
                         lwd = 2)   
                }
         )
+      }
+      
+      # show legend
+      legend(x = "topright",
+             c("Normal Curve", "Mean", "Median"),
+             col = c("blue", "green", "red"),
+             lwd = c(2, 2, 2)) 
     }
-    
-    # show legend
-    legend(x = "topright",
-           c("Density plot", "Mean", "Median"),
-           col = c("blue", "green", "red"),
-           lwd = c(2, 2, 2))
   })
   
   output$lmplot <- renderPlot({
