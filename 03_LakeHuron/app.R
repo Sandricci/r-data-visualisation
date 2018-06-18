@@ -28,7 +28,7 @@ ui <- fluidPage(
                   tabPanel("Plot", plotOutput("plot", height = 800), htmlOutput("correlation")),
                   tabPanel("Moments, Location, Variation", 
                            column(htmlOutput("measures"), htmlOutput("locations"),htmlOutput("variations"), width = 6)),
-                  tabPanel("Distribution", plotOutput("distribution"), plotOutput("boxplot")),
+                  tabPanel("Distribution", plotOutput("distribution"),plotOutput("boxplot")),
                   tabPanel("Regression Analysis", plotOutput("lmplot", height = 800, width = 1000)),
                   tabPanel("Summary", verbatimTextOutput("summary"), verbatimTextOutput("corsummary")),
                   tabPanel("Data", fluidRow(column(DT::dataTableOutput('tbl'), width = 6))) # Data as datatable
@@ -85,12 +85,13 @@ server <- function(input, output) {
   output$distribution <- renderPlot({
     if(input$density) {
       hist(LakeHuron, main = "Histogram with Density Plot", breaks = input$bins, freq = FALSE)
-      lines(density(LakeHuron), col = "red", lwd = 2)
-      lines(density(LakeHuron, adjust=2), lty="dotted", lwd = 2)
+      d <- density(LakeHuron)
+      lines(d, col = "darkred", lwd = 2)
+      polygon(d, col = rgb(1,0.5,0.2 ,0.5))
       legend(x = "topright",
-             c("Density (adjust=1)", "Density (adjust=2)"),
-             col = c("darkred", "black"), lty = c("solid", "dotted"),
-             lwd = c(2, 2)) 
+             c("Density"),
+             col = c("darkred"), lty = c("solid"),
+             lwd = c(2)) 
     }
     else {
       h <- hist(LakeHuron, main="", xlab= time(LakeHuron))

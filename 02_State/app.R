@@ -129,12 +129,13 @@ server <- function(input, output) {
     if(input$density) {
       hist(var, main="Histogram with Density Plot", xlab = input$outcome, freq = F, breaks = input$bins)
       d <- density(var)
-      lines(d, col = "red", lwd = 2)
+      lines(d, col = "darkred", lwd = 2)
       lines(d, adjust=2, lty="dotted", lwd = 2)
+      polygon(d, col = rgb(1,0.5,0.2 ,0.5))
       # show legend
       legend(x = "topright",
-             c("Density (adjust=1)", "Density (adjust=2)"),
-             col = c("darkred", "black"), lty = c("solid", "dotted"),
+             c("Density"),
+             col = c("darkred"), lty = c("solid"),
              lwd = c(2, 2)) 
     }
     else {
