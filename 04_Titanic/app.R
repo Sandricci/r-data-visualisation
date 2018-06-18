@@ -38,7 +38,7 @@ ui <- fluidPage(
       mainPanel(
         tabsetPanel(type = "tabs",
                     tabPanel("Plot", plotOutput("plot", height = 800)),
-                    tabPanel("Proportions", 
+                    tabPanel("Contingency Table", 
                       fluidRow(
                         column(tableOutput("contitable"), width = 12))),
                     tabPanel("Data", DT::dataTableOutput('tbl'))) # Data as datatable)
