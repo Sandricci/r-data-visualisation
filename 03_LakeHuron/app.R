@@ -102,7 +102,7 @@ server <- function(input, output) {
   
   output$distribution <- renderPlot({
     if(input$density) {
-      hist(LakeHuron, main = "Histogram with Density Plot", yaxt = "n", ylab = NULL, xaxs ="i", breaks = input$bins, freq = FALSE)
+      hist(LakeHuron, main = "Histogram with Density Plot", yaxt = "n", ylab = NULL, xaxs ="i", breaks = input$bins, freq = FALSE, xlab = "Water levels")
       d <- density(LakeHuron)
       lines(d, col = "tomato", lwd = 2)
       polygon(d, col = rgb(1,0.5,0.2 ,0.5))
@@ -112,7 +112,7 @@ server <- function(input, output) {
              lwd = c(2)) 
     }
     else {
-      h <- hist(LakeHuron, main="Histogram (Counts)", xlab= time(LakeHuron), yaxt = "n", ylab = NULL, xaxs ="i",)
+      h <- hist(LakeHuron, main="Histogram (Counts)", xlab= "Water levels", yaxt = "n", ylab = NULL, xaxs ="i")
       
       # set normal curve
       xfit<-seq(min(LakeHuron),max(LakeHuron),length=40) 
